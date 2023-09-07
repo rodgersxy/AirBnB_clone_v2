@@ -4,44 +4,46 @@ fabric script that generates a .tgz archive from
 the contents of web_static
 distributes archive to web servers
 """
-from fabric import task
-from fabric.exceptions import NetworkError
-import os
+from fabric.api import local, put, run, env
+from datetime import datetime
 
 
 """Define the user and hosts for the web servers"""
 env.user = 'ubuntu'
 env.hosts = ['54.209.59.161', '52.3.246.242']
 
-@task
+def do_pack():
+    """distribute and deploy an archive to web servers"""
+    now = datetime.now().strftime("%Y%m%d%H%M%S")
+    local('sudo mkdir -p ./versions')
+    path = './versions/web_static_{}'.format(now)
+    local('sudo tar -czvf {}.tgz web_static'.format(path))
+    name = '{}.tgz'.format(path)
+    if name:
+        return name
+    else:
+        return None
+
+
 def do_deploy(archive_path):
     """
     Distribute and deploy an archive to web servers.
+    Upload the archive to the /tmp/ directory on the web servers
+    Create a symbolic link to the new release
     """
-    if not os.path.isfile(archive_path):
-        return False
-
     try:
-        """Get the base name of the archive (without extension)"""
-        base_name = os.path.basename(archive_path).split('.')[0]
-
-        """Upload the archive to the /tmp/ directory on the web servers"""
-        put(archive_path, '/tmp/')
-
-        """Create the release directory"""
-        run('mkdir -p /data/web_static/releases/{}'.format(base_name))
-
-        """Uncompress the archive to the release directory"""
-        run('tar -xzf /tmp/{} -C /data/web_static/releases/{}'.format(os.path.basename(archive_path), base_name))
-
-        """Remove the uploaded archive"""
-        run('rm /tmp/{}'.format(os.path.basename(archive_path)))
-
-        """Create a symbolic link to the new release"""
-        run('rm -f /data/web_static/current')
-        run('ln -s /data/web_static/releases/{}/ /data/web_static/current'.format(base_name))
-
+        archive = archive_path.split('/')[-1]
+        path = '/data/web_static/releases/' + archive.strip('.tgz')
+        current = '/data/web_static/current'
+        put(archive_path, '/tmp')
+        run('mkdir -p {}/'.format(path))
+        run('tar -xzf /tmp/{} -C {}'.format(archive, path))
+        run('rm /tmp/{}'.format(archive))
+        run('mv {}/web_static/* {}'.format(path, path))
+        run('rm -rf {}/web_static'.format(path))
+        run('rm -rf {}'.format(current))
+        run('ln -s {} {}'.format(path, current))
+        print('New version deployed!')
         return True
-
-    except NetworkError:
+    except:
         return False
