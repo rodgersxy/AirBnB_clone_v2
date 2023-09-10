@@ -57,13 +57,7 @@ file { '/data/web_static/current':
   notify  => Service['nginx'],
 }
 
-# Change ownership of /data/
-file { '/data/':
-  ensure  => 'directory',
-  owner   => 'ubuntu',
-  group   => 'ubuntu',
-  recurse => true,
-}
+# Remove the conflicting /data/ declaration
 
 # Ensure web server directories are created
 file { '/var/www':
