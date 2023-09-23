@@ -1,46 +1,33 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 """
 a script that starts a Flask web application
 web application must be listening on 0.0.0.0, port 5000
 """
 
 
-from models.state import State
 from models import storage
+from models.state import State
 from flask import Flask, render_template
-
 app = Flask(__name__)
 
 
-@app.route('/states', strict_slashes=False)
-def state():
+@app.route('/states')
+@app.route('/states/<id>')
+def states_list(id=None):
+    """Render template with states
     """
-    display a HTML page: (inside the tag BODY)
-    with the list of all State objects present in DBStorage sorted by name
-    """
-    states = storage.all("State")
-    return render_template('9-states.html', state=states)
-
-
-@app.route('/states/<id>', strict_slashes=False)
-def state_by_id(id):
-    """
-    display a HTML page: (inside the tag BODY)
-    State object is found with this id
-    """
-    for state in storage.all("State").values():
-        if state.id == id:
-            return render_template('9-states.html', state=state)
-    return render_template('9-states.html')
+    path = '9-states.html'
+    states = storage.all(State)
+    return render_template(path, states=states, id=id)
 
 
 @app.teardown_appcontext
-def close_storage(exception):
-    """
-    Close session(method)
+def app_teardown(arg=None):
+    """Clean-up session
     """
     storage.close()
 
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+if __name__ == '__main__':
+    app.url_map.strict_slashes = False
+    app.run(host='0.0.0.0', port=5000)
