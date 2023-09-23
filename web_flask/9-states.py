@@ -18,8 +18,8 @@ def state():
     display a HTML page: (inside the tag BODY)
     with the list of all State objects present in DBStorage sorted by name
     """
-    states = storage.all(State)
-    return render_template('9-states.html', states=states, mode='all')
+    states = storage.all("State")
+    return render_template('9-states.html', state=states)
 
 
 @app.route('/states/<id>', strict_slashes=False)
@@ -28,14 +28,14 @@ def state_by_id(id):
     display a HTML page: (inside the tag BODY)
     State object is found with this id
     """
-    for state in storage.all(State).values():
+    for state in storage.all("State").values():
         if state.id == id:
-            return render_template('9-states.html', states=state, mode='id')
-    return render_template('9-states.html', states=state, mode='none')
+            return render_template('9-states.html', state=state)
+    return render_template('9-states.html')
 
 
 @app.teardown_appcontext
-def close(self):
+def close_storage(exception):
     """
     Close session(method)
     """
