@@ -14,7 +14,8 @@ app = Flask(__name__)
 @app.route('/states')
 @app.route('/states/<id>')
 def states_list(id=None):
-    """Render template with states
+    """
+    Render template with states
     """
     path = '9-states.html'
     states = storage.all(State)
@@ -23,7 +24,8 @@ def states_list(id=None):
 
 @app.teardown_appcontext
 def app_teardown(arg=None):
-    """Clean-up session
+    """
+    Clean-up session
     """
     storage.close()
 
